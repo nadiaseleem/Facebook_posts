@@ -1,13 +1,23 @@
 package com.example.facebook_posts
 
+import android.Manifest
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_AIRPLANE_MODE_CHANGED
+import android.content.Intent.ACTION_BATTERY_CHANGED
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.facebook_posts.databinding.ActivityMainBinding
@@ -22,11 +32,71 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var postsAdapter: PostsAdapter
     private val posts = mutableListOf<Post>()
+
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                //to connect with binding
+                ACTION_BATTERY_CHANGED -> {
+                    val level = intent.getIntExtra("level", 0)
+                    binding.progressBar.progress = level
+                }
+                //must be dynamically registered
+
+                Intent.ACTION_POWER_CONNECTED -> {
+                    Toast.makeText(context, "Power connected", Toast.LENGTH_LONG).show()
+                }
+
+                ACTION_AIRPLANE_MODE_CHANGED -> {
+
+                    val isTurnedOn = intent.getBooleanExtra("state", false)
+                    if (isTurnedOn) {
+                        Toast.makeText(
+                            context,
+                            "Air plane mode is turned on!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Air plane mode is turned off!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    companion object {
+        const val CUSTOM_ACTION = "com.example.facebook_posts.CUSTOM_ACTION"
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setRecyclerView()
+
+        registerReceiver(receiver, IntentFilter().apply {
+            addAction(ACTION_BATTERY_CHANGED)
+            addAction(Intent.ACTION_POWER_CONNECTED)
+            addAction(ACTION_AIRPLANE_MODE_CHANGED)
+        })
+
+        //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED) {
+//            // Permission is already granted, proceed with functionality
+//        } else {
+        // Permission not granted, request it
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.RECEIVE_SMS, Manifest.permission.READ_PHONE_STATE),
+            23
+        )
+//      }
 
         //EXAMPLE 1
         binding.btnOpenWebPage.setOnClickListener {
@@ -54,6 +124,10 @@ class MainActivity : AppCompatActivity() {
         }
         postsAdapter.onShareClick = { post ->
             sharePost(post)
+            val intent = Intent(this, MyReceiver::class.java).apply {
+                action = CUSTOM_ACTION
+            }
+            sendBroadcast(intent)
         }
     }
 
@@ -194,6 +268,11 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(receiver)
     }
 
 }

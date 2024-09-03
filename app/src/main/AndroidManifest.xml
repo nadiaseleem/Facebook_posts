@@ -1,20 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!--    Purpose of <queries>-->
-    <!--    Package Visibility: In Android 11 and later
+    <!-- Purpose of <queries> -->
+    <!--
+    Package Visibility: In Android 11 and later
     , apps can only see a limited set of other installed apps for privacy and security reasons.
      The <queries> element allows your app to explicitly declare which other apps, services, or intent actions
      it might interact with. This declaration makes your app able to query the system for matching components,
-     such as checking if an app that can handle a certain intent is installed on the device.-->
-
+     such as checking if an app that can handle a certain intent is installed on the device.
+    -->
     <queries>
         <intent>
             <action android:name="android.intent.action.SEND" />
+
             <data android:mimeType="*/*" />
         </intent>
+    </queries> <!-- Purpose of <uses-feature> -->
+    <!-- Specifying Hardware or Software Requirements: -->
+    <!--
+    The <uses-feature> tag is used to specify a particular hardware or software feature that your app depends on.
+     This can include things like a camera, GPS, telephony, Bluetooth, etc.
+    -->
+    <!-- Controlling App Availability: -->
+    <!-- Google Play uses this information to determine which devices are compatible with your app. If a feature is marked as required, your app will only be available to devices that support that feature. -->
+    <!-- If a feature is marked as not required, your app can still be installed on devices that do not have that feature, but the app should be designed to handle the absence of that feature gracefully. -->
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
 
-    </queries>
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -34,6 +50,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -43,6 +60,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <receiver
+            android:name=".MyReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+                <action android:name="android.intent.action.PHONE_STATE" />
+                <action android:name="com.example.facebook_posts.CUSTOM_ACTION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
