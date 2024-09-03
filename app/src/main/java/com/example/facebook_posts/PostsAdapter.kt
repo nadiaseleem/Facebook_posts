@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import com.example.facebook_posts.databinding.PostItemBinding
 
 class PostsAdapter(private val posts: List<Post>) : Adapter<PostsAdapter.ViewHolder>() {
-    inner class ViewHolder(private val binding: PostItemBinding) : RecyclerView.ViewHolder(binding.root){
+    inner class ViewHolder(val binding: PostItemBinding) : RecyclerView.ViewHolder(binding.root){
         fun bind(post: Post){
             binding.personNameTv.text = post.author
             binding.dateTv.text = post.date
@@ -31,6 +31,13 @@ class PostsAdapter(private val posts: List<Post>) : Adapter<PostsAdapter.ViewHol
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val post = posts[position]
         holder.bind(post)
+        onShareClick?.let {
+            holder.binding.shareMv.setOnClickListener {
+                onShareClick?.invoke(post)
+            }
+        }
     }
+    var onShareClick: ((Post)->Unit)?=null
+
 
 }
